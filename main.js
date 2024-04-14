@@ -3,13 +3,13 @@ const ctx = canvas.getContext("2d");
 
 let isPlaying = true;
 let isDebugMode = true;
-let isGridVisible = true;
+let isGridVisible = false;
 let isWorldBoundaries = false;
 
 let pressedKey = null;
 let canvasWidth = canvas.width;
 let canvasHeight = canvas.height;
-let cellSize = 5;
+let cellSize = 20;
 let rows = Math.floor(canvasHeight / cellSize);
 let columns = Math.floor(canvasWidth / cellSize);
 let grid = Array(columns)
@@ -92,7 +92,7 @@ addEventListener("keydown", (e) => {
     if (key === "d") {
         isDebugMode = !isDebugMode;
     }
-    if(key === "b"){
+    if (key === "b") {
         isWorldBoundaries = !isWorldBoundaries;
     }
 });
@@ -142,7 +142,7 @@ function drawCells() {
     //     newGrid.push(grid[x].slice());
     // }
 
-    if(isMouseDown && isMouseLeftDown) {
+    if (isMouseDown && isMouseLeftDown) {
         cellClicked(mx, my);
     }
 
@@ -151,7 +151,7 @@ function drawCells() {
         .map(() => Array(rows).fill(ItemEmpty));
 
     for (let x = 0; x < columns; x++) {
-        for (let y = 0; y < rows; y++) {
+        for (let y = rows - 1; y >= 0; y--) {
             if (grid[x][y] === ItemEmpty) {
                 ctx.fillStyle = "white";
             } else if (grid[x][y] === ItemStone) {
@@ -160,18 +160,36 @@ function drawCells() {
             } else if (grid[x][y] === ItemSand) {
                 ctx.fillStyle = "yellow";
 
-                if (isValidCell(x, y + 1) && grid[x][y + 1] === ItemEmpty) {
+                if (isValidCell(x, y + 1) && newGrid[x][y + 1] === ItemEmpty) {
+                    // while going down-left check only newGrid not the grid
                     newGrid[x][y + 1] = ItemSand;
                 } else if (y + 1 === rows && !isWorldBoundaries) {
-                } else if (isValidCell(x - 1, y + 1) && grid[x - 1][y + 1] === ItemEmpty) {
+                    // do nothing
+                } else if (isValidCell(x - 1, y + 1) && grid[x - 1][y + 1] === ItemEmpty && grid[x - 1][y] === ItemEmpty) {
                     newGrid[x - 1][y + 1] = ItemSand;
-                } else if (isValidCell(x + 1, y + 1) && grid[x + 1][y + 1] === ItemEmpty) {
+                } else if (isValidCell(x + 1, y + 1) && grid[x + 1][y + 1] === ItemEmpty && grid[x + 1][y] === ItemEmpty) {
                     newGrid[x + 1][y + 1] = ItemSand;
                 } else {
                     newGrid[x][y] = ItemSand;
                 }
             } else if (grid[x][y] === ItemWater) {
                 ctx.fillStyle = "blue";
+
+                if (isValidCell(x, y + 1) && grid[x][y + 1] === ItemEmpty) {
+                    newGrid[x][y + 1] = ItemWater;
+                } else if (y + 1 === rows && !isWorldBoundaries) {
+                    // do nothing
+                } else if (isValidCell(x - 1, y + 1) && grid[x - 1][y + 1] === ItemEmpty && grid[x - 1][y] === ItemEmpty) {
+                    newGrid[x - 1][y + 1] = ItemWater;
+                } else if (isValidCell(x + 1, y + 1) && grid[x + 1][y + 1] === ItemEmpty && grid[x + 1][y] === ItemEmpty) {
+                    newGrid[x + 1][y + 1] = ItemWater;
+                } else if (isValidCell(x - 1, y) && grid[x - 1][y] === ItemEmpty && newGrid[x - 1][y] === ItemEmpty) {
+                    newGrid[x - 1][y] = ItemWater;
+                } else if (isValidCell(x + 1, y) && grid[x + 1][y] === ItemEmpty && newGrid[x + 1][y] === ItemEmpty) {
+                    newGrid[x + 1][y] = ItemWater;
+                } else {
+                    newGrid[x][y] = ItemWater;
+                }
             }
 
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
